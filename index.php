@@ -1,3 +1,26 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    $domain = $_POST['domain'];
+    $context = stream_context_create(['ssl' => ['capture_peer_cert' => true]]);
+    $stream = @stream_socket_client('ssl://' . $domain . ':443', $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
+
+    if (!$stream) {
+        echo json_encode(["status" => "error", "message" => "Unable to connect"]);
+        exit();
+    }
+
+    $certificate = stream_context_get_params($stream)['options']['ssl']['peer_certificate'];
+    $certinfo = openssl_x509_parse($certificate);
+
+    if (time() < $certinfo['validFrom_time_t'] || time() > $certinfo['validTo_time_t']) {
+        echo json_encode(["status" => "expired", "message" => "Expired"]);
+    } else {
+        echo json_encode(["status" => "valid", "message" => "Valid"]);
+    }
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -51,7 +74,8 @@
         $(function() {
             $('#ssl-form').submit(function(event) {
                 event.preventDefault();
-                const domains = $('#domain-list').val().split(',');
+                // Use a regular expression to split the input by comma or newline
+                const domains = $('#domain-list').val().split(/[,|\n]/);
                 const result = $('#result');
                 result.empty();
 
@@ -62,13 +86,14 @@
                         domainResult.text(`Checking ${trimmedDomain}...`);
 
                         $.ajax({
-                            url: '',
+                            url: window.location.href, // Set the URL to the current page
                             type: 'POST',
                             data: {
                                 domain: trimmedDomain
                             },
+                            dataType: 'json', // Expect a JSON response
                             success: function(response) {
-                                domainResult.text(`${trimmedDomain}: ${response}`);
+                                domainResult.text(`${trimmedDomain}: ${response.message}`);
                             },
                             error: function() {
                                 domainResult.text(`${trimmedDomain}: Error occurred while checking SSL certificate`);
@@ -82,25 +107,3 @@
 </body>
 
 </html>
-<?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $domain = $_POST['domain'];
-    $context = stream_context_create(['ssl' => ['capture_peer_cert' => true]]);
-    $stream = @stream_socket_client('ssl://' . $domain . ':443', $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
-
-    if (!$stream) {
-        echo "Unable to connect";
-        exit();
-    }
-
-    $certificate = stream_context_get_params($stream)['options']['ssl']['peer_certificate'];
-    $certinfo = openssl_x509_parse($certificate);
-
-    if (time() < $certinfo['validFrom_time_t'] || time() > $certinfo['validTo_time_t']) {
-        echo "Expired";
-    } else {
-        echo "Valid";
-    }
-    exit();
-}
-?>
