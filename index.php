@@ -1,59 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SSL Certificate Checker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        #ssl-form {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
         #result {
             font-family: monospace;
+            width: 100%;
+            max-width: 600px;
         }
-          .domain-result {
-        margin-bottom: 10px;
-    }
-</style>
+
+        .domain-result {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
+
 <body>
     <h1>SSL Certificate Checker</h1>
     <form id="ssl-form">
-        <label for="domain-list">Enter domain names separated by comma:</label><br>
-        <textarea id="domain-list" name="domain-list" rows="10" cols="50"></textarea><br><br>
+        <label for="domain-list">Enter domain names separated by comma:</label>
+        <textarea id="domain-list" name="domain-list" rows="10" cols="50"></textarea>
         <input type="submit" value="Check SSL Certificates">
     </form>
-    <br>
     <div id="result"></div>
-  <script>
-    $(function () {
-        $('#ssl-form').submit(function (event) {
-            event.preventDefault();
-            let domains = $('#domain-list').val().split(',');
-            let result = $('#result');
-            result.empty();
+    <script>
+        $(function() {
+            $('#ssl-form').submit(function(event) {
+                event.preventDefault();
+                const domains = $('#domain-list').val().split(',');
+                const result = $('#result');
+                result.empty();
 
-            domains.forEach(function (domain) {
-                domain = domain.trim();
-                if (domain) {
-                    let domainResult = $('<div>').addClass('domain-result').appendTo(result);
-                    domainResult.text('Checking ' + domain + '...');
+                domains.forEach(function(domain) {
+                    const trimmedDomain = domain.trim();
+                    if (trimmedDomain) {
+                        const domainResult = $('<div>').addClass('domain-result').appendTo(result);
+                        domainResult.text(`Checking ${trimmedDomain}...`);
 
-                    $.ajax({
-                        url: 'ssl-checker.php',
-                        type: 'POST',
-                        data: { domain: domain },
-                        success: function (response) {
-                            domainResult.text(domain + ': ' + response);
-                        },
-                        error: function () {
-                            domainResult.text(domain + ': Error occurred while checking SSL certificate');
-                        }
-                    });
-                }
+                        $.ajax({
+                            url: '',
+                            type: 'POST',
+                            data: {
+                                domain: trimmedDomain
+                            },
+                            success: function(response) {
+                                domainResult.text(`${trimmedDomain}: ${response}`);
+                            },
+                            error: function() {
+                                domainResult.text(`${trimmedDomain}: Error occurred while checking SSL certificate`);
+                            }
+                        });
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
 </body>
+
 </html>
-<!-- Create a separate PHP file named "ssl-checker.php" -->
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $domain = $_POST['domain'];
