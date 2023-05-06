@@ -1,7 +1,9 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
-    $domain = $_POST['domain'];
+    
+    $domain = filter_var($_POST['domain'], FILTER_SANITIZE_STRING);
+    
     $context = stream_context_create(['ssl' => ['capture_peer_cert' => true]]);
     $stream = @stream_socket_client('ssl://' . $domain . ':443', $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
 
