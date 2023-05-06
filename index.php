@@ -71,38 +71,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
     <div id="result"></div>
     <script>
-        $(function() {
-            $('#ssl-form').submit(function(event) {
-                event.preventDefault();
-                // Use a regular expression to split the input by comma or newline
-                const domains = $('#domain-list').val().split(/[,|\n]/);
-                const result = $('#result');
-                result.empty();
+// Use ES6+ syntax and features
+$(function() {
+    $('#ssl-form').submit(function(event) {
+        event.preventDefault();
+        const domains = $('#domain-list').val().split(/[,|\n]/);
+        const result = $('#result');
+        result.empty();
 
-                domains.forEach(function(domain) {
-                    const trimmedDomain = domain.trim();
-                    if (trimmedDomain) {
-                        const domainResult = $('<div>').addClass('domain-result').appendTo(result);
-                        domainResult.text(`Checking ${trimmedDomain}...`);
+        domains.forEach((domain) => {
+            const trimmedDomain = domain.trim();
+            if (trimmedDomain) {
+                const domainResult = $('<div>').addClass('domain-result').appendTo(result);
+                domainResult.text(`Checking ${trimmedDomain}...`);
 
-                        $.ajax({
-                            url: window.location.href, // Set the URL to the current page
-                            type: 'POST',
-                            data: {
-                                domain: trimmedDomain
-                            },
-                            dataType: 'json', // Expect a JSON response
-                            success: function(response) {
-                                domainResult.text(`${trimmedDomain}: ${response.message}`);
-                            },
-                            error: function() {
-                                domainResult.text(`${trimmedDomain}: Error occurred while checking SSL certificate`);
-                            }
-                        });
+                $.ajax({
+                    url: window.location.href,
+                    type: 'POST',
+                    data: {
+                        domain: trimmedDomain
+                    },
+                    dataType: 'json',
+                    success: (response) => {
+                        domainResult.text(`${trimmedDomain}: ${response.message}`);
+                    },
+                    error: () => {
+                        domainResult.text(`${trimmedDomain}: Error occurred while checking SSL certificate`);
                     }
                 });
-            });
+            }
         });
+    });
+});
     </script>
 </body>
 
